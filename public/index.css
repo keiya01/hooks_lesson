@@ -1,0 +1,33 @@
+*{
+	box-sizing: border-box;
+	-webkit-overflow-scrolling: touch;
+}
+a:hover{
+	text-decoration: none;
+}
+a:active{
+	border: none;
+}
+body {
+	font-family:
+		-apple-system, BlinkMacSystemFont, "Helvetica Neue", "Yu Gothic", 
+		YuGothic, "ヒラギノ角ゴ ProN W3", Hiragino Kaku Gothic ProN, Arial, 
+		"メイリオ", Meiryo, sans-serif
+		;
+}
+html,body{
+	margin: 0;
+}
+h1,h2,h3,h4,h5,h6,p{
+	margin: 0;
+	padding: 0;
+}
+input, button, textarea{
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border-radius: none;
+}
+textarea{
+	resize: none;
+}

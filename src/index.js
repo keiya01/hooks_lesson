@@ -1,8 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
+import App from './components/App';
 import * as serviceWorker from './serviceWorker';
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { faCheckCircle, faTrashAlt, faEdit } from '@fortawesome/free-solid-svg-icons'
+
+library.add(faCheckCircle, faTrashAlt, faEdit)
 
 ReactDOM.render(<App />, document.getElementById('root'));
 
