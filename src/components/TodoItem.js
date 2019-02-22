@@ -2,9 +2,9 @@ import * as React from 'react'
 import { StyleSheet, css } from 'aphrodite'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
-const { useState, useRef, useLayoutEffect } = React
+const { useState, useRef, useEffect } = React
 
-export default function TodoItem(props) {
+export default React.memo(function TodoItem(props) {
     const {
         completed,
         body,
@@ -12,25 +12,60 @@ export default function TodoItem(props) {
         dispatch,
         type
     } = props
-    const [completedAnimation, setCompletedAnimation] = useState(false)
-    const [deleteAnimation, setDeleteAnimation] = useState(false)
-    const [checkAnimation, setCheckAnimation] = useState(false)
-    const [isEditMode, setIsEditMode] = useState(false)
+    const [animationFlags, setAimationFlags] = useState({
+        complete: false,
+        delete: false,
+        check: false
+    })
     const [editText, changeEditText] = useState(body)
     const editInput = useRef(null)
+
+
+    const [isEditMode, setIsEditMode] = useState(false)
+    useEffect(() => {
+        isEditMode && editInput.current.focus()
+    }, [isEditMode])
+
     const setTodoStyle = completed => completed ? 'complete' : 'notComplete'
     const setIconColor = completed => completed ? 'blue' : '#ccc'
 
-    useLayoutEffect(() => {
-        isEditMode && editInput.current.focus()
-    }, [isEditMode])
+    const handleCompletedAnimation = () => {
+        if (type === 'all') {
+            setAimationFlags(flags => ({
+                ...flags,
+                complete: !completed
+            }))
+            dispatch({ type: 'TOGGLE_TODO', id })
+        } else {
+            setAimationFlags(flags => ({
+                ...flags,
+                check: true
+            }))
+            setTimeout(() => dispatch({ type: 'TOGGLE_TODO', id }), 300)
+        }
+    }
+
+    const handleUpdateTodo = (event) => {
+        if (event.keyCode === 13) {
+            dispatch({ type: 'UPDATE_TODO', id, body: editText })
+            setIsEditMode(false)
+        }
+    }
+
+    const handleDeleteTodo = () => {
+        setAimationFlags(flags => ({
+            ...flags,
+            delete: true
+        }))
+        setTimeout(() => dispatch({ type: 'DELETE_TODO', id }), 300)
+    }
 
     return (
         <div className={css(
             styles.todo,
             styles[setTodoStyle(completed)],
-            styles[deleteAnimation && 'deleteAnimation'],
-            styles[checkAnimation && 'checkAnimation']
+            styles[animationFlags.delete && 'deleteAnimation'],
+            styles[animationFlags.check && 'checkAnimation']
         )}>
             {
                 isEditMode
@@ -40,33 +75,16 @@ export default function TodoItem(props) {
                         value={editText}
                         onChange={e => changeEditText(e.target.value)}
                         ref={editInput}
-                        onKeyDown={e => {
-                            if (e.keyCode === 13) {
-                                if (editText === body) {
-                                    setIsEditMode(false)
-                                    return
-                                }
-                                dispatch({ type: 'UPDATE_TODO', id, body: editText })
-                                setIsEditMode(false)
-                            }
-                        }} />
+                        onKeyDown={handleUpdateTodo} />
                     :
                     <>
                         <div
                             className={css(styles.todoItem)}
-                            onClick={() => {
-                                if (type === 'all') {
-                                    setCompletedAnimation(() => !completed && true)
-                                    dispatch({ type: 'TOGGLE_TODO', id })
-                                } else {
-                                    setCheckAnimation(true)
-                                    setTimeout(() => dispatch({ type: 'TOGGLE_TODO', id }), 300)
-                                }
-                            }}>
+                            onClick={() => handleCompletedAnimation(completed)}>
                             <p className={css(styles.todoBody)}>
                                 <FontAwesomeIcon
                                     icon='check-circle'
-                                    className={css(styles[completedAnimation && 'completedAnimation'])}
+                                    className={css(styles[animationFlags.complete && 'completedAnimation'])}
                                     style={{ color: setIconColor(completed), marginRight: 10 }}
                                 />
                                 {body}
@@ -81,17 +99,14 @@ export default function TodoItem(props) {
                             <FontAwesomeIcon
                                 icon='trash-alt'
                                 className={css(styles.trashBox)}
-                                onClick={() => {
-                                    setDeleteAnimation(true)
-                                    setTimeout(() => dispatch({ type: 'DELETE_TODO', id }), 300)
-                                }}
+                                onClick={() => handleDeleteTodo()}
                             />
                         </div>
                     </>
             }
         </div>
     )
-}
+})
 
 const completedAnime = [
     {
@@ -142,9 +157,12 @@ const styles = StyleSheet.create({
     todo: {
         display: 'flex',
         flexDirection: 'row',
-        padding: '5px 0px 0px 20px',
+        padding: '10px 5px 10px 20px',
         width: '100%',
-        margin: '10px auto',
+        margin: '20px auto',
+        ':hover': {
+            backgroundColor: '#eee',
+        }
     },
     notComplete: {
         borderLeft: '3px solid tomato',
@@ -177,7 +195,7 @@ const styles = StyleSheet.create({
         marginTop: 2
     },
     trashBox: {
-        color: '#c0c0c0',
+        color: '#ccc',
         marginLeft: 15,
         fontSize: 16,
         ':hover': {
@@ -185,7 +203,7 @@ const styles = StyleSheet.create({
         }
     },
     editIcon: {
-        color: '#c0c0c0',
+        color: '#ccc',
         marginLeft: 8,
         fontSize: 16,
         ':hover': {

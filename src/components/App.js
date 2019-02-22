@@ -109,7 +109,7 @@ const filterTodos = (todos, activeFilter) => {
 export default function App() {
   const [text, changeText] = useState('')
   const [activeFilter, changeActiveFilter] = useState('all')
-  const [isAddedTodo, setAddedTodo] = useState(false)
+  const [isAddedTodo, setIsAddedTodo] = useState(false)
   const [state, dispatch] = useReducer(reducer, initialState)
   const inputText = useRef(null)
 
@@ -121,8 +121,15 @@ export default function App() {
 
   useLayoutEffect(() => {
     inputText.current.focus()
-    return setAddedTodo(false)
   }, [isAddedTodo])
+
+  const handleAddTodo = (event) => {
+      if (event.keyCode === 13) {
+        dispatch({ type: 'ADD_TODO', text })
+        changeText('')
+        setIsAddedTodo(true)
+      }
+  }
 
   return (
     <div className={css(styles.container)}>
@@ -132,13 +139,7 @@ export default function App() {
           className={css(styles.input)}
           placeholder='TODOを入力してEnterで追加'
           onChange={(e) => changeText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.keyCode === 13) {
-              dispatch({ type: 'ADD_TODO', text })
-              changeText('')
-              setAddedTodo(true)
-            }
-          }}
+          onKeyDown={handleAddTodo}
           value={text} />
       </div>
       <div style={{ clear: 'left' }} />
@@ -186,7 +187,7 @@ export default function App() {
         }
       </div>
     </div>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -253,11 +254,17 @@ const styles = StyleSheet.create({
     ':active': {
       boxShadow: 'none',
       marginTop: 0.3
+    },
+    ':hover': {
+      border: '1px solid #EB8686'
     }
   },
   selected: {
     border: 'none',
     boxShadow: 'null',
+    ':hover': {
+      border: 'none'
+    }
   },
   selectText: {
     fontSize: 13,
