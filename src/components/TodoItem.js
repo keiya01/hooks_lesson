@@ -42,6 +42,10 @@ export default function TodoItem(props) {
                         ref={editInput}
                         onKeyDown={e => {
                             if (e.keyCode === 13) {
+                                if (editText === body) {
+                                    setIsEditMode(false)
+                                    return
+                                }
                                 dispatch({ type: 'UPDATE_TODO', id, body: editText })
                                 setIsEditMode(false)
                             }
