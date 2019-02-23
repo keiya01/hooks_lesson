@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { StyleSheet, css } from 'aphrodite'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { useFocusInput } from '../hooks';
 
 const { useState, useRef, useEffect } = React
 
@@ -17,14 +18,10 @@ export default React.memo(function TodoItem(props) {
         delete: false,
         check: false
     })
+    const [, forceUpdate] = useState(false)
     const [editText, changeEditText] = useState(body)
-    const editInput = useRef(null)
-
-
     const [isEditMode, setIsEditMode] = useState(false)
-    useEffect(() => {
-        isEditMode && editInput.current.focus()
-    }, [isEditMode])
+    const editInput = useFocusInput(null)
 
     const setTodoStyle = completed => completed ? 'complete' : 'notComplete'
     const setIconColor = completed => completed ? 'blue' : '#ccc'
@@ -71,10 +68,13 @@ export default React.memo(function TodoItem(props) {
                 isEditMode
                     ?
                     <input
+                        ref={e => {
+                            editInput.current = e
+                            forceUpdate(update => !update)
+                        }}
                         className={css(styles.editText)}
                         value={editText}
                         onChange={e => changeEditText(e.target.value)}
-                        ref={editInput}
                         onKeyDown={handleUpdateTodo} />
                     :
                     <>
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     },
     deleteAnimation: {
         animationDuration: '300ms',
-        animationTimingFunction: 'ease-in',
+        animationTimingFunction: 'ease-in-out',
         animationFillMode: 'forwards',
         animationName: deleteAnime,
     },
