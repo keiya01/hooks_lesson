@@ -3,9 +3,9 @@ import ReactDOM from 'react-dom';
 import App from './components/App';
 import * as serviceWorker from './serviceWorker';
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faCheckCircle, faTrashAlt, faEdit, faClock } from '@fortawesome/free-solid-svg-icons'
+import { faCheckCircle, faTrashAlt, faEdit, faClock, faTimes, faCompressArrowsAlt } from '@fortawesome/free-solid-svg-icons'
 
-library.add(faCheckCircle, faTrashAlt, faEdit, faClock)
+library.add(faCheckCircle, faTrashAlt, faEdit, faClock, faTimes)
 
 ReactDOM.render(<App />, document.getElementById('root'));
 

@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { StyleSheet, css } from 'aphrodite'
 import { useFocusInput } from '../hooks';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 const { useState, useEffect, useRef } = React
 
@@ -80,7 +81,7 @@ export default function TimerModal(props) {
         }))
     }, timer, visible)
 
-    const handleOnInvisible = () => {
+    const handleInvisible = () => {
         setVisible(false)
     }
 
@@ -150,8 +151,13 @@ export default function TimerModal(props) {
     }
     return (
         <div className={css(styles.timerModalContainer)}>
-            <div className={css(styles.hideContainer)} onClick={handleOnInvisible} />
+            <div className={css(styles.hideContainer)} onClick={handleInvisible} />
             <div className={css(styles.timerModal)}>
+                <FontAwesomeIcon
+                    icon='times'
+                    className={css(styles.timesIcon)}
+                    onClick={handleInvisible}
+                />
                 <h3 className={css(styles.timerModalTitle)}>{title}</h3>
                 <div className={css(styles.timer)}>
                     {
@@ -227,7 +233,7 @@ const styles = StyleSheet.create({
     },
     timerModal: {
         display: 'inline-block',
-        position: 'absolute',
+        position: 'fixed',
         top: 0,
         right: 0,
         bottom: 0,
@@ -243,10 +249,18 @@ const styles = StyleSheet.create({
         animationTimingFunction: 'easy',
         animationName: modalSlideDown,
     },
+    timesIcon: {
+        position: 'absolute',
+        top: 20,
+        left: 20,
+        fontSize: 20,
+        color: '#999',
+        cursor: 'pointer'
+    },
     timerModalTitle: {
         textAlign: 'center',
         fontSize: 26,
-        color: '#6088C6',
+        color: '#FF9900',
         marginTop: 50
     },
     errorContainer: {
@@ -272,7 +286,8 @@ const styles = StyleSheet.create({
         borderBottom: '1px solid #c0c0c0',
         marginRight: 15,
         textAlign: 'center',
-        padding: '20px 5px',
+        padding: '20px 5px 10px 5px',
+        borderRadius: 0,
         '::placeholder': {
             color: '#ccc',
             textAlign: 'center',

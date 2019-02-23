@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
         }
     },
     notComplete: {
-        borderLeft: '3px solid tomato',
+        borderLeft: '3px solid #FF3300',
     },
     complete: {
         borderLeft: '3px solid #136FFF',

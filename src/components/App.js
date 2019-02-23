@@ -1,9 +1,9 @@
-import * as React from 'react';
+import * as React from 'react'
 import { StyleSheet, css } from 'aphrodite'
 import { useFocusInput } from '../hooks'
 import TodoItem from './TodoItem'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import TimerModal from './TimerModal';
+import SelectItem from './SelectItem'
+import TimerModal from './TimerModal'
 
 const { useState, useReducer } = React
 
@@ -11,14 +11,20 @@ const Filters = [
   {
     type: 'all',
     name: 'すべて',
+    color: '#eeb186',
+    activeColor: '#8B4513'
   },
   {
     type: 'incomplete',
     name: '未完了',
+    color: '#e5c2b8',
+    activeColor: '#d60000'
   },
   {
     type: 'completed',
     name: '完了',
+    color: '#b3d0ff',
+    activeColor: '#0000cc'
   },
 ]
 
@@ -138,9 +144,9 @@ export default function App() {
 
   return (
     <>
-      <TimerModal 
-      visible={visible} 
-      setVisible={setVisible}/>
+      <TimerModal
+        visible={visible}
+        setVisible={setVisible} />
       <div className={css(styles.container)}>
         <div className={css(styles.form)}>
           <input
@@ -152,31 +158,33 @@ export default function App() {
             value={text} />
         </div>
         <div className={css(styles.selectContainer)}>
-          {
-            Filters.map(filter => {
-              const backgroundColor = filter.type === activeFilter ? '#EB8686' : '#fff'
-              const selected = filter.type === activeFilter && 'selected'
-              const textStyle = filter.type === activeFilter ? 'selectedText' : 'selectText'
-              return (
-                <div
-                  key={filter.type}
-                  className={css(styles.filterBox, styles[selected])}
-                  style={{ backgroundColor }}
-                  onClick={() => changeActiveFilter(filter.type)}>
-                  <p className={css(styles[textStyle])}>{filter.name}</p>
-                </div>
-              )
-            })
-          }
-          <div
-          className={css(styles.timerButton)} 
-          style={{ backgroundColor: '#AEC4E5' }}
-          onClick={() => setVisible(true)}>
-            <p className={css(styles.timerIcon)}>
-              <FontAwesomeIcon
-                icon='clock' />
-            </p>
-          </div>
+          <SelectItem
+            name='全て'
+            color='#ddd'
+            activeColor='#31444D'
+            isActive={activeFilter === 'all'}
+            onClick={() => changeActiveFilter('all')}
+          />
+          <SelectItem
+            name='未完了'
+            color='#e5c2b8'
+            activeColor='#d60000'
+            isActive={activeFilter === 'incomplete'}
+            onClick={() => changeActiveFilter('incomplete')}
+          />
+          <SelectItem
+            name='完了'
+            color='#b3d0ff'
+            activeColor='#0000cc'
+            isActive={activeFilter === 'complete'}
+            onClick={() => changeActiveFilter('complete')}
+          />
+          <SelectItem
+            icon='clock'
+            color='#ffdca8'
+            onClick={() => setVisible(true)}
+            iconSize={26}
+          />
           <div style={{ clear: 'left' }} />
         </div>
         <div className={css(styles.todosContainer)}>
@@ -244,8 +252,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     margin: '0 auto',
     backgroundColor: '#fff',
-    borderTop: '1px solid #EB8686',
-    borderBottom: '1px solid #EB8686',
+    borderTop: '1px solid #ccc',
+    borderBottom: '1px solid #ccc',
     marginTop: 70,
     marginBottom: 30,
     paddingLeft: 40,
@@ -254,80 +262,6 @@ const styles = StyleSheet.create({
     paddingBottom: 15,
     '@media(max-width: 450px)': {
       paddingLeft: 30
-    }
-  },
-  filterBox: {
-    cursor: 'pointer',
-    width: 55,
-    height: 55,
-    borderRadius: '50%',
-    float: 'left',
-    textAlign: 'center',
-    marginRight: 30,
-    border: '1px solid #eee',
-    boxShadow: '0 0 2px #bbb',
-    ':active': {
-      boxShadow: 'none',
-      transform: 'translateY(1px)'
-    },
-    ':hover': {
-      border: '1px solid #EB8686'
-    },
-    '@media(max-width: 450px)': {
-      width: 45,
-      height: 45,
-      marginRight: 20
-    }
-  },
-  timerButton: {
-    cursor: 'pointer',
-    width: 55,
-    height: 55,
-    borderRadius: '50%',
-    float: 'left',
-    textAlign: 'center',
-    marginRight: 30,
-    border: '1px solid #eee',
-    boxShadow: '0 0 2px #bbb',
-    ':active': {
-      boxShadow: 'none',
-      transform: 'translateY(1px)'
-    },
-    '@media(max-width: 450px)': {
-      width: 45,
-      height: 45,
-    }
-  },
-  timerIcon: {
-    fontSize: 23,
-    lineHeight: '54px',
-    color: '#fff',
-    '@media(max-width: 450px)': {
-        fontSize: 20,
-        lineHeight: '41px'
-    }
-  },
-  selected: {
-    border: 'none',
-    boxShadow: 'null',
-    ':hover': {
-      border: 'none'
-    }
-  },
-  selectText: {
-    fontSize: 13,
-    color: '#555',
-    lineHeight: '55px',
-    '@media(max-width: 450px)': {
-      lineHeight: '45px'
-    }
-  },
-  selectedText: {
-    fontSize: 13,
-    color: '#fff',
-    lineHeight: '55px',
-    '@media(max-width: 450px)': {
-      lineHeight: '45px'
     }
   },
   todosContainer: {
