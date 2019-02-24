@@ -235,7 +235,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     width: '90%',
-    maxWidth: 480,
+    maxWidth: 700,
     height: '100%',
     textAlign: 'center',
     margin: '20px auto',

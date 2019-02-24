@@ -173,6 +173,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         width: '100%',
         margin: '20px auto',
+        backgroundColor: '#fff',
         ':hover': {
             backgroundColor: '#eee',
         }
@@ -193,7 +194,7 @@ const styles = StyleSheet.create({
         flex: 1,
         cursor: 'pointer',
         textAlign: 'left',
-        padding: '10px 5px 10px 20px',
+        padding: '12px 5px 12px 20px',
     },
     todoBody: {
         width: '100%',
@@ -206,7 +207,7 @@ const styles = StyleSheet.create({
     toolsContainer: {
         display: 'inline-block',
         cursor: 'pointer',
-        marginTop: 13,
+        marginTop: 15,
         marginRight: 10
     },
     trashBox: {

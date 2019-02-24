@@ -130,9 +130,9 @@ export default memo(function TimerModal(props) {
 
     const setTitle = () => {
         if (isStarting) {
-            return time < 1 ? '時間切れです' : 'TODOを終えてください'
+            return time < 1 ? '時間切れです' : 'TODOを始めてください'
         }
-        return '制限時間を決める'
+        return 'タイマーをセットする'
     }
 
     const setActiveStyle = (activeState) => (isStarting === activeState) && 'activeButton'
@@ -175,7 +175,7 @@ export default memo(function TimerModal(props) {
                                             <input
                                                 ref={handleFocusInput}
                                                 className={css(styles.settingInput)}
-                                                placeholder='制限時間'
+                                                placeholder='時間'
                                                 type='number'
                                                 value={duration.value}
                                                 onChange={handleSetDuration}

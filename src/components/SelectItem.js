@@ -8,7 +8,6 @@ export default function SelectItem(props) {
         color,
         activeColor,
         isActive,
-        textColor,
         icon,
         iconSize,
         onClick
@@ -48,11 +47,11 @@ const styles = StyleSheet.create({
         width: 55,
         height: 55,
         borderRadius: '50%',
+        backgroundColor: '#fff',
         float: 'left',
         textAlign: 'center',
         marginRight: 30,
         ':active': {
-            boxShadow: 'none',
             transform: 'translateY(1px)'
         },
         '@media(max-width: 450px)': {
