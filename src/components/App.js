@@ -5,28 +5,13 @@ import TodoItem from './TodoItem'
 import SelectItem from './SelectItem'
 import TimerModal from './TimerModal'
 
-const { useState, useReducer } = React
+const { useState, useReducer, memo } = React
 
-const Filters = [
-  {
-    type: 'all',
-    name: 'すべて',
-    color: '#eeb186',
-    activeColor: '#8B4513'
-  },
-  {
-    type: 'incomplete',
-    name: '未完了',
-    color: '#e5c2b8',
-    activeColor: '#d60000'
-  },
-  {
-    type: 'completed',
-    name: '完了',
-    color: '#b3d0ff',
-    activeColor: '#0000cc'
-  },
-]
+const Filters = {
+  ALL: 'all',
+  INCOMPLETE: 'incomplete',
+  COMPLETED: 'completed'
+}
 
 const initialState = {
   todos: []
@@ -111,29 +96,16 @@ const reducer = (state, action) => {
   }
 }
 
-const filterTodos = (todos, activeFilter) => {
-  switch (activeFilter) {
-    case 'completed':
-      return todos.filter(todo => todo.completed === true)
-    case 'incomplete':
-      return todos.filter(todo => todo.completed === false)
-    default:
-      return todos
-  }
-}
-
-export default function App() {
+const AddTodoForm = memo((props) => {
+  const {
+    dispatch
+  } = props
   const [text, changeText] = useState('')
-  const [activeFilter, changeActiveFilter] = useState('all')
-  const [visible, setVisible] = useState(false)
-  const [state, dispatch] = useReducer(reducer, initialState)
   const inputBox = useFocusInput()
 
-  const {
-    todos
-  } = state
-
-  const filteringTodos = filterTodos(todos, activeFilter)
+  const handleChangeText = (event) => {
+    changeText(event.target.value)
+  }
 
   const handleAddTodo = (event) => {
     if (event.keyCode === 13) {
@@ -143,46 +115,90 @@ export default function App() {
   }
 
   return (
+    <input
+      ref={inputBox}
+      className={css(styles.input)}
+      placeholder='TODOを入力してEnterで追加'
+      onChange={handleChangeText}
+      onKeyDown={handleAddTodo}
+      value={text} />
+  )
+})
+
+export default function App() {
+  const [activeFilter, changeActiveFilter] = useState('all')
+  const [visible, setVisible] = useState(false)
+  const [isStartingTimer, setIsStartingTimer] = useState(false)
+  // TimerModalをHeaderに変更するフラグ
+  const [isHeader, setIsHeader] = useState(false)
+  const [state, dispatch] = useReducer(reducer, initialState)
+
+  const {
+    todos
+  } = state
+
+  const onOpenModal = () => {
+    if (!visible) {
+      setVisible(true)
+      return
+    }
+    setIsHeader(isHeader => !isHeader)
+  }
+
+  const filterTodos = (todos, activeFilter) => {
+    switch (activeFilter) {
+      case 'completed':
+        return todos.filter(todo => todo.completed === true)
+      case 'incomplete':
+        return todos.filter(todo => todo.completed === false)
+      default:
+        return todos
+    }
+  }
+
+  const filteringTodos = filterTodos(todos, activeFilter)
+
+  return (
     <>
       <TimerModal
         visible={visible}
-        setVisible={setVisible} />
+        setVisible={setVisible}
+        isStarting={isStartingTimer}
+        setIsStarting={setIsStartingTimer}
+        isHeader={isHeader}
+        setIsHeader={setIsHeader} />
       <div className={css(styles.container)}>
         <div className={css(styles.form)}>
-          <input
-            ref={inputBox}
-            className={css(styles.input)}
-            placeholder='TODOを入力してEnterで追加'
-            onChange={(e) => changeText(e.target.value)}
-            onKeyDown={handleAddTodo}
-            value={text} />
+          <AddTodoForm dispatch={dispatch} />
         </div>
         <div className={css(styles.selectContainer)}>
           <SelectItem
             name='全て'
             color='#ddd'
             activeColor='#31444D'
-            isActive={activeFilter === 'all'}
-            onClick={() => changeActiveFilter('all')}
+            isActive={activeFilter === Filters.ALL}
+            onClick={() => changeActiveFilter(Filters.ALL)}
           />
           <SelectItem
             name='未完了'
             color='#e5c2b8'
-            activeColor='#d60000'
-            isActive={activeFilter === 'incomplete'}
-            onClick={() => changeActiveFilter('incomplete')}
+            activeColor='#FF3300'
+            isActive={activeFilter === Filters.INCOMPLETE}
+            onClick={() => changeActiveFilter(Filters.INCOMPLETE)}
           />
           <SelectItem
             name='完了'
             color='#b3d0ff'
-            activeColor='#0000cc'
-            isActive={activeFilter === 'complete'}
-            onClick={() => changeActiveFilter('complete')}
+            activeColor='#136FFF'
+            isActive={activeFilter === Filters.COMPLETED}
+            onClick={() => changeActiveFilter(Filters.COMPLETED)}
           />
           <SelectItem
             icon='clock'
             color='#ffdca8'
-            onClick={() => setVisible(true)}
+            activeColor='#FF9900'
+            isActive={isStartingTimer}
+            onClick={onOpenModal}
             iconSize={26}
           />
           <div style={{ clear: 'left' }} />

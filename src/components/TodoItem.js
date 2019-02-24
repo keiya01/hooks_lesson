@@ -3,9 +3,9 @@ import { StyleSheet, css } from 'aphrodite'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useFocusInput } from '../hooks';
 
-const { useState, useRef, useEffect } = React
+const { useState, useRef, useEffect, memo } = React
 
-export default React.memo(function TodoItem(props) {
+export default memo(function TodoItem(props) {
     const {
         completed,
         body,
@@ -23,9 +23,16 @@ export default React.memo(function TodoItem(props) {
     const [isEditMode, setIsEditMode] = useState(false)
     const editInput = useFocusInput(null)
 
-    const setTodoStyle = completed => completed ? 'complete' : 'notComplete'
-    const setIconColor = completed => completed ? 'blue' : '#ccc'
+    const handleFocusEditText = elem => {
+        editInput.current = elem
+        forceUpdate(update => !update)
+    }
 
+    const handleChangeEditText = event => {
+        changeEditText(event.target.value)
+    }
+
+    // TODOアイテムをクリックされた時のアニメーションをフィルタリングタイプによって分ける
     const handleCompletedAnimation = () => {
         if (type === 'all') {
             setAimationFlags(flags => ({
@@ -57,35 +64,42 @@ export default React.memo(function TodoItem(props) {
         setTimeout(() => dispatch({ type: 'DELETE_TODO', id }), 300)
     }
 
+    const handleSetIsEditMode = () => {
+        setIsEditMode(true)
+    }
+
+    const todoStyle = completed ? 'complete' : 'inComplete'
+    const iconColor = completed ? 'blue' : '#ccc'
+    const deleteAnimation = animationFlags.delete && 'deleteAnimation'
+    const checkAnimation = animationFlags.check && 'checkAnimation'
+    const completedAnimation = animationFlags.complete && 'completedAnimation'
+
     return (
         <div className={css(
             styles.todo,
-            styles[setTodoStyle(completed)],
-            styles[animationFlags.delete && 'deleteAnimation'],
-            styles[animationFlags.check && 'checkAnimation']
+            styles[todoStyle],
+            styles[deleteAnimation],
+            styles[checkAnimation]
         )}>
             {
                 isEditMode
                     ?
                     <input
-                        ref={e => {
-                            editInput.current = e
-                            forceUpdate(update => !update)
-                        }}
+                        ref={handleFocusEditText}
                         className={css(styles.editText)}
                         value={editText}
-                        onChange={e => changeEditText(e.target.value)}
+                        onChange={handleChangeEditText}
                         onKeyDown={handleUpdateTodo} />
                     :
                     <>
                         <div
                             className={css(styles.todoItem)}
-                            onClick={() => handleCompletedAnimation(completed)}>
+                            onClick={handleCompletedAnimation}>
                             <p className={css(styles.todoBody)}>
                                 <FontAwesomeIcon
                                     icon='check-circle'
-                                    className={css(styles[animationFlags.complete && 'completedAnimation'])}
-                                    style={{ color: setIconColor(completed), marginRight: 10 }}
+                                    className={css(styles[completedAnimation])}
+                                    style={{ color: iconColor, marginRight: 10 }}
                                 />
                                 {body}
                             </p>
@@ -94,12 +108,12 @@ export default React.memo(function TodoItem(props) {
                             <FontAwesomeIcon
                                 icon='edit'
                                 className={css(styles.editIcon)}
-                                onClick={() => setIsEditMode(true)}
+                                onClick={handleSetIsEditMode}
                             />
                             <FontAwesomeIcon
                                 icon='trash-alt'
                                 className={css(styles.trashBox)}
-                                onClick={() => handleDeleteTodo()}
+                                onClick={handleDeleteTodo}
                             />
                         </div>
                     </>
@@ -157,14 +171,13 @@ const styles = StyleSheet.create({
     todo: {
         display: 'flex',
         flexDirection: 'row',
-        padding: '10px 5px 10px 20px',
         width: '100%',
         margin: '20px auto',
         ':hover': {
             backgroundColor: '#eee',
         }
     },
-    notComplete: {
+    inComplete: {
         borderLeft: '3px solid #FF3300',
     },
     complete: {
@@ -180,6 +193,7 @@ const styles = StyleSheet.create({
         flex: 1,
         cursor: 'pointer',
         textAlign: 'left',
+        padding: '10px 5px 10px 20px',
     },
     todoBody: {
         width: '100%',
@@ -192,7 +206,8 @@ const styles = StyleSheet.create({
     toolsContainer: {
         display: 'inline-block',
         cursor: 'pointer',
-        marginTop: 2
+        marginTop: 13,
+        marginRight: 10
     },
     trashBox: {
         color: '#ccc',
@@ -227,6 +242,7 @@ const styles = StyleSheet.create({
         height: '100%',
         border: '1.5px solid #6088C6',
         padding: '5px',
+        margin: '10px 10px 10px 20px',
         fontSize: 15,
         color: '#333',
         ':focus': {

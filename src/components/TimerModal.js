@@ -1,15 +1,15 @@
 import * as React from 'react'
 import { StyleSheet, css } from 'aphrodite'
-import { useFocusInput } from '../hooks';
+import { useFocusInput, useInterval } from '../hooks';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-const { useState, useEffect, useRef } = React
+const { useState, useEffect, useRef, memo } = React
 
-const useResetDuration = (reset, timer, visible) => {
+const useResetDuration = (reset, isStarting, visible) => {
     // timer関連のアクションが起きたら入力値をリセット
     useEffect(() => {
         reset()
-    }, [timer])
+    }, [isStarting])
 
     // modalの表示・非表示が行われたらリセット
     useEffect(() => {
@@ -17,34 +17,19 @@ const useResetDuration = (reset, timer, visible) => {
     }, [visible])
 }
 
-const useTimer = (callback, isStart, delay) => {
-    const saveCallback = useRef()
-    useEffect(() => {
-        saveCallback.current = callback
-    }, [callback])
-
-    useEffect(() => {
-        const handleCounter = () => {
-            saveCallback.current()
-        }
-        if (isStart) {
-            const clear = setInterval(handleCounter, delay)
-            return () => clearInterval(clear)
-        }
-    }, [isStart])
-}
-
-export default function TimerModal(props) {
+export default memo(function TimerModal(props) {
     const {
         visible,
-        setVisible
+        setVisible,
+        setIsStarting,
+        isStarting,
+        isHeader,
+        setIsHeader
     } = props
 
     const [, forceUpdate] = useState(false)
-    const [timer, setTimer] = useState({
-        isStart: false,
-        duration: 0,
-    })
+    const [time, setTime] = useState(0)
+    const [delay, setDelay] = useState(null)
     const [duration, setDuration] = useState({
         value: '',
         error: {
@@ -55,20 +40,15 @@ export default function TimerModal(props) {
     const startButton = useRef(null)
     const settingInput = useFocusInput()
 
-    useTimer(() => {
-        setTimer({
-            ...timer,
-            duration: timer.duration - 1
-        })
+    useInterval(() => {
+        setTime(time - 1)
 
-        if (timer.duration === 1) {
-            setTimer({
-                ...timer,
-                isStart: false
-            })
+        if (time === 1) {
+            setIsHeader(false)
+            setDelay(null)
             return
         }
-    }, timer.isStart, 60000)
+    }, delay)
 
     useResetDuration(() => {
         setDuration(prevDuration => ({
@@ -79,10 +59,21 @@ export default function TimerModal(props) {
                 message: ''
             }
         }))
-    }, timer, visible)
+    }, isStarting, visible)
 
-    const handleInvisible = () => {
+    const handleInvisibleModal = () => {
+        if (isStarting) {
+            if (time > 0) {
+                setIsHeader(true)
+                return
+            }
+            setIsStarting(false)
+        }
         setVisible(false)
+    }
+
+    const handleHideHeader = () => {
+        setIsHeader(false)
     }
 
     const handleSetDuration = event => {
@@ -123,19 +114,13 @@ export default function TimerModal(props) {
             return
         }
 
-        setTimer(timer => ({
-            ...timer,
-            isStart: true,
-            duration: parsedDuration
-        }))
+        setIsStarting(true)
+        setDelay(60000)
+        setTime(parsedDuration)
     }
 
     const handleOnStop = () => {
-        setTimer(timer => ({
-            ...timer,
-            isStart: false
-        }))
-
+        setIsStarting(false)
     }
 
     const handleFocusInput = elem => {
@@ -143,62 +128,81 @@ export default function TimerModal(props) {
         forceUpdate(update => !update)
     }
 
-    const setActiveStyle = (activeState) => (timer.isStart === activeState) && 'activeButton'
-    const title = timer.isStart ? 'TODOを終えてください' : '制限時間を決める'
+    const setTitle = () => {
+        if (isStarting) {
+            return time < 1 ? '時間切れです' : 'TODOを終えてください'
+        }
+        return '制限時間を決める'
+    }
+
+    const setActiveStyle = (activeState) => (isStarting === activeState) && 'activeButton'
+    let title = setTitle()
 
     if (!visible) {
         return null
     }
     return (
-        <div className={css(styles.timerModalContainer)}>
-            <div className={css(styles.hideContainer)} onClick={handleInvisible} />
-            <div className={css(styles.timerModal)}>
-                <FontAwesomeIcon
-                    icon='times'
-                    className={css(styles.timesIcon)}
-                    onClick={handleInvisible}
-                />
-                <h3 className={css(styles.timerModalTitle)}>{title}</h3>
-                <div className={css(styles.timer)}>
-                    {
-                        timer.isStart
-                            ?
-                            <h3 className={css(styles.duration)}>{timer.duration}</h3>
-                            :
-                            <>
-                                <div className={css(styles.errorContainer)}>
-                                    <p style={{ fontSize: 16, color: '#999', letterSpacing: '0.1em' }}>60分以内で入力してください</p>
-                                    {duration.error.isError && <p className={css(styles.errorMessage)}>{duration.error.message}</p>}
-                                </div>
-                                <input
-                                    ref={handleFocusInput}
-                                    className={css(styles.settingInput)}
-                                    placeholder='制限時間'
-                                    type='number'
-                                    value={duration.value}
-                                    onChange={handleSetDuration}
-                                    onKeyDown={handleOnKeyDown} />
-                            </>
-                    }
-                    <p className={css(styles.timerUnit)}>min</p>
-                </div>
-                <div className={css(styles.timerButtonContainer)}>
-                    <button
-                        className={css(styles.startButton, styles.timerButton, styles[setActiveStyle(true)])}
-                        onClick={handleOnStart}
-                        ref={startButton}>
-                        スタート
-                    </button>
-                    <button
-                        className={css(styles.stopButton, styles.timerButton, styles[setActiveStyle(false)])}
-                        onClick={handleOnStop}>
-                        ストップ
-                    </button>
-                </div>
-            </div>
-        </div>
+        <>
+            {
+                isHeader
+                    ?
+                    <div className={css(styles.timerHeader)} onClick={handleHideHeader}>
+                        <p className={css(styles.timerMessage)}>残り時間</p>
+                        <h3 className={css(styles.headerDuration)}>{time}</h3>
+                        <p className={css(styles.timerUnit)}>min</p>
+                    </div>
+                    :
+                    <>
+                        <div className={css(styles.hideContainer)} onClick={handleInvisibleModal} />
+                        <div className={css(styles.timerModal)}>
+                            <FontAwesomeIcon
+                                icon='times'
+                                className={css(styles.timesIcon)}
+                                onClick={handleInvisibleModal}
+                            />
+                            <h3 className={css(styles.timerModalTitle)}>{title}</h3>
+                            <div className={css(styles.timer)}>
+                                {
+                                    isStarting
+                                        ?
+                                        <h3 className={css(styles.modalDuration)}>{time}</h3>
+                                        :
+                                        <>
+                                            <div className={css(styles.errorContainer)}>
+                                                <p style={{ fontSize: 16, color: '#999', letterSpacing: '0.1em' }}>60分以内で入力してください</p>
+                                                {duration.error.isError && <p className={css(styles.errorMessage)}>{duration.error.message}</p>}
+                                            </div>
+                                            <input
+                                                ref={handleFocusInput}
+                                                className={css(styles.settingInput)}
+                                                placeholder='制限時間'
+                                                type='number'
+                                                value={duration.value}
+                                                onChange={handleSetDuration}
+                                                onKeyDown={handleOnKeyDown} />
+                                        </>
+                                }
+                                <p className={css(styles.timerUnit)}>min</p>
+                            </div>
+                            <div className={css(styles.timerButtonContainer)}>
+                                <button
+                                    className={css(styles.startButton, styles.timerButton, styles[setActiveStyle(true)])}
+                                    onClick={handleOnStart}
+                                    ref={startButton}>
+                                    スタート
+                                </button>
+                                <button
+                                    className={css(styles.stopButton, styles.timerButton, styles[setActiveStyle(false)])}
+                                    onClick={handleOnStop}>
+                                    ストップ
+                                </button>
+                            </div>
+                        </div>
+                    </>
+            }
+        </>
     )
-}
+})
 
 const modalSlideDown = [
     {
@@ -214,22 +218,59 @@ const modalSlideDown = [
     }
 ]
 
+const fadeInOut = [
+    {
+        '0%': {
+            opacity: 0.2
+        },
+        '50%': {
+            opacity: 1
+        },
+        '100%': {
+            opacity: 0.2
+        }
+    }
+]
+
 const styles = StyleSheet.create({
-    timerModalContainer: {
+    timerHeader: {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: '#fff',
+        boxShadow: '0 1px 8px #ccc',
+        textAlign: 'center',
+        padding: '15px 0',
+        cursor: 'pointer',
+        ':hover': {
+            backgroundColor: '#eee',
+            boxShadow: '0 1px 3px #ccc',
+        }
+    },
+    timerMessage: {
+        fontSize: 13,
+        color: '#999',
+        marginBottom: 5
+    },
+    headerDuration: {
+        display: 'inline-block',
+        fontSize: 25,
+        color: 'tomato',
+        letterSpacing: '0.2em',
+        animationDuration: '1s',
+        animationTimingFunction: 'linear',
+        animationIterationCount: 'infinite',
+        animationName: fadeInOut,
+    },
+    hideContainer: {
         position: 'fixed',
         top: 0,
         right: 0,
         bottom: 0,
         left: 0,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    },
-    hideContainer: {
-        position: 'absolute',
-        top: 0,
-        right: 0,
-        bottom: 0,
-        left: 0,
-        zIndex: -1,
+        zIndex: 1,
     },
     timerModal: {
         display: 'inline-block',
@@ -248,6 +289,20 @@ const styles = StyleSheet.create({
         animationDuration: '800ms',
         animationTimingFunction: 'easy',
         animationName: modalSlideDown,
+        zIndex: 2
+    },
+    modalDuration: {
+        display: 'inline-block',
+        fontSize: 50,
+        color: 'tomato',
+        letterSpacing: '0.2em',
+        width: 120,
+        textAlign: 'center',
+        marginTop: 30,
+        animationDuration: '1s',
+        animationTimingFunction: 'linear',
+        animationIterationCount: 'infinite',
+        animationName: fadeInOut,
     },
     timesIcon: {
         position: 'absolute',
@@ -261,7 +316,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         fontSize: 26,
         color: '#FF9900',
-        marginTop: 50
+        marginTop: 50,
     },
     errorContainer: {
         width: '100%',
@@ -302,16 +357,6 @@ const styles = StyleSheet.create({
             margin: 0,
         },
     },
-    duration: {
-        display: 'inline-block',
-        width: 120,
-        textAlign: 'center',
-        fontSize: 50,
-        color: '#555',
-        letterSpacing: '0.2em',
-        marginTop: 40,
-        marginRight: 15,
-    },
     timerUnit: {
         display: 'inline-block',
         fontSize: 23,
@@ -330,6 +375,7 @@ const styles = StyleSheet.create({
         color: '#fff',
         borderRadius: 5,
         boxShadow: '0 0 5px #999',
+        cursor: 'pointer',
         ':active': {
             boxShadow: 'none',
             transform: 'translateY(1px)'
