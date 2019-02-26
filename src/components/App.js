@@ -5,7 +5,7 @@ import TodoItem from './TodoItem'
 import SelectItem from './SelectItem'
 import TimerModal from './TimerModal'
 
-const { useState, useReducer, memo } = React
+const { useState, useReducer, useMemo, memo } = React
 
 const Filters = {
   ALL: 'all',
@@ -146,6 +146,7 @@ export default function App() {
   }
 
   const filterTodos = (todos, activeFilter) => {
+    console.log('todo_render')
     switch (activeFilter) {
       case 'completed':
         return todos.filter(todo => todo.completed === true)
@@ -156,7 +157,7 @@ export default function App() {
     }
   }
 
-  const filteringTodos = filterTodos(todos, activeFilter)
+  const filteringTodos = useMemo(() => filterTodos(todos, activeFilter), [todos, activeFilter])
 
   return (
     <>
